@@ -10,8 +10,8 @@
     <!-- PreviewView ajustada a media pantalla -->
     <androidx.camera.view.PreviewView
         android:id="@+id/viewFinder"
-        android:layout_width="406dp"
-        android:layout_height="730dp"
+        android:layout_width="412dp"
+        android:layout_height="761dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.5"

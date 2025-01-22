@@ -25,19 +25,19 @@ class MainActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.navigation_camera -> {
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.contenedor_tabs, CameraFragment())
+                        .replace(R.id.contenedor_tabs, CameraTab())
                         .commit()
                     true
                 }
                 R.id.navigation_history -> {
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.contenedor_tabs, HistoryFragment())
+                        .replace(R.id.contenedor_tabs, HistoryTab())
                         .commit()
                     true
                 }
                 R.id.navigation_user -> {
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.contenedor_tabs, UserFragment())
+                        .replace(R.id.contenedor_tabs, UserTab())
                         .commit()
                     true
                 }

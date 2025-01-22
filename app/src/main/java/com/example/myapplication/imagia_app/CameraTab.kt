@@ -21,7 +21,7 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class CameraFragment : Fragment() {
+class CameraTab : Fragment() {
 
     private var _binding: LayoutCamaraBinding? = null
     private val binding get() = _binding!!
@@ -108,7 +108,7 @@ class CameraFragment : Fragment() {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    val msg = "Foto guardada en: ${output.savedUri}"
+                    val msg = "Foto guardada con éxito."
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
                 }

@@ -1,4 +1,4 @@
 <resources>
-    <color name="colorSelected">#6200EE</color> <!-- Color cuando está seleccionado -->
+    <color name="colorSelected">#F5370B</color> <!-- Color cuando está seleccionado -->
     <color name="colorUnselected">#757575</color> <!-- Color cuando no está seleccionado -->
 </resources>
