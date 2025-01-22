@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">ImagIA-APP</string>
+    <string name="history">History</string>
+    <string name="user">User</string>
+    <string name="camera">Camera</string>
+</resources>
