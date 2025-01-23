@@ -2,7 +2,12 @@ package com.example.myapplication.imagia_app
 
 import android.Manifest
 import android.content.ContentValues
+import android.content.Context
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,14 +25,21 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.math.abs
 
-class CameraTab : Fragment() {
+class CameraTab : Fragment(), SensorEventListener {
 
     private var _binding: LayoutCamaraBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var cameraExecutor: ExecutorService
     private var imageCapture: ImageCapture? = null
+
+    private lateinit var sensorManager: SensorManager
+    private lateinit var accelerometer: Sensor
+
+    private var lastTapTime: Long = 0
+    private var tapCount = 0
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,6 +49,7 @@ class CameraTab : Fragment() {
         return binding.root
     }
 
+    // Iniciar camara y sensores
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -48,11 +61,18 @@ class CameraTab : Fragment() {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
+        // Inicializar el sensor
+        sensorManager = requireContext().getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)!!
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
+
+        // Listener para el botón de captura
         binding.captureButton.setOnClickListener {
             takePhoto()
         }
     }
 
+    //Iniciar camara x en el layout
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
 
@@ -78,6 +98,7 @@ class CameraTab : Fragment() {
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
+    // Tomar foto con camara x y guardarla en la galeria
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
 
@@ -116,14 +137,45 @@ class CameraTab : Fragment() {
         )
     }
 
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+    // Función que detecta cuando se mueve el sensor y toma foto
+    override fun onSensorChanged(event: SensorEvent) {
+        if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
+            val x = abs(event.values[0])
+            val y = abs(event.values[1])
+            val z = abs(event.values[2])
+            val currentTime = System.currentTimeMillis()
+
+            // Diferenciar entre los golpes y el movimiento del movil
+            val tapThreshold = 2.0 // Golpe
+            val movementThreshold = 1.0 // Movimiento del movil
+
+            if (z > tapThreshold && x < movementThreshold && y < movementThreshold) {
+                if (currentTime - lastTapTime < 2000) {
+                    tapCount++
+                    if (tapCount == 2) {
+                        takePhoto()
+                        tapCount = 0
+                    }
+                } else {
+                    tapCount = 1
+                }
+                lastTapTime = currentTime
+            }
+        }
     }
+
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
         cameraExecutor.shutdown()
+        sensorManager.unregisterListener(this)
+    }
+
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
     }
 
     companion object {

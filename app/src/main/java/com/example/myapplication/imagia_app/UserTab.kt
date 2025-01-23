@@ -13,4 +13,6 @@ class UserTab : Fragment() {
     ): View {
         return inflater.inflate(R.layout.layout_usuario, container, false)
     }
+
+    // Todavía por implementar
 }

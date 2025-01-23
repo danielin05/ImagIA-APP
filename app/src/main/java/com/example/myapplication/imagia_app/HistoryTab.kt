@@ -13,4 +13,6 @@ class HistoryTab : Fragment() {
     ): View {
         return inflater.inflate(R.layout.layout_historial, container, false)
     }
+
+    // Todavía por implementar
 }

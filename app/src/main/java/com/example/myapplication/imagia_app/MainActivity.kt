@@ -19,8 +19,12 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        supportActionBar?.hide()
+
+        // Iniciar barra de navegación
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.barra_navegacion)
 
+        // Mandar al layout correspondiente cuando pulsas en la opción del menú
         bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_camera -> {
