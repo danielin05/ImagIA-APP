@@ -1,5 +1,6 @@
 package com.example.myapplication.imagia_app
 
+import TTSUtils
 import android.Manifest
 import android.content.ContentValues
 import android.content.Context
@@ -40,12 +41,14 @@ class CameraTab : Fragment(), SensorEventListener {
 
     private var lastTapTime: Long = 0
     private var tapCount = 0
+    private lateinit var ttsUtils: TTSUtils
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = LayoutCamaraBinding.inflate(inflater, container, false)
+        ttsUtils = TTSUtils(requireContext())
         return binding.root
     }
 
@@ -129,6 +132,26 @@ class CameraTab : Fragment(), SensorEventListener {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    val imageUri = output.savedUri ?: return
+                    val bitmap = MediaStore.Images.Media.getBitmap(
+                        requireContext().contentResolver, 
+                        imageUri
+                    )
+                    val base64Image = ImageUtils.imageToBase64(bitmap)
+                    // Post image analysis to the server
+                    ServerUtils.postImageAnalysis(
+                        prompt = "Analyze this image",
+                        images = listOf<String>(base64Image),
+                        onSuccess = { response ->
+                            Log.d(TAG, "Image analysis successful: $response")
+                            ttsUtils.speak(response)
+                        },
+                        onFailure = { errorMessage ->
+                            Log.e(TAG, "Image analysis failed: $errorMessage")
+                            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                    
                     val msg = "Foto guardada con éxito."
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
