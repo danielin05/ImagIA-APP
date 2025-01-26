@@ -11,6 +11,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
@@ -22,6 +23,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.myapplication.imagia_app.databinding.LayoutCamaraBinding
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -111,17 +113,16 @@ class CameraTab : Fragment(), SensorEventListener {
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/CameraX-Image")
             }
         }
 
-        val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(
-                requireContext().contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues
-            ).build()
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(
+            requireContext().contentResolver,
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            contentValues
+        ).build()
 
         imageCapture.takePicture(
             outputOptions,
@@ -129,35 +130,71 @@ class CameraTab : Fragment(), SensorEventListener {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Error al capturar la foto: ${exc.message}", exc)
+                    Toast.makeText(requireContext(), "Error al guardar la foto.", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    val imageUri = output.savedUri ?: return
-                    val bitmap = MediaStore.Images.Media.getBitmap(
-                        requireContext().contentResolver, 
-                        imageUri
-                    )
-                    val base64Image = ImageUtils.imageToBase64(bitmap)
-                    // Post image analysis to the server
-                    ServerUtils.postImageAnalysis(
-                        prompt = "Analyze this image",
-                        images = listOf<String>(base64Image),
-                        onSuccess = { response ->
-                            Log.d(TAG, "Image analysis successful: $response")
-                            ttsUtils.speak(response)
-                        },
-                        onFailure = { errorMessage ->
-                            Log.e(TAG, "Image analysis failed: $errorMessage")
-                            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                    
-                    val msg = "Foto guardada con éxito."
-                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, msg)
+                    val imageUri = output.savedUri
+                    if (imageUri != null) {
+                        Log.d(TAG, "Foto guardada: $imageUri")
+                        Toast.makeText(requireContext(), "Foto guardada con éxito.", Toast.LENGTH_SHORT).show()
+
+                        val bitmap = ImageUtils.resizeImage(MediaStore.Images.Media.getBitmap(
+                            requireContext().contentResolver,
+                            imageUri
+                        ))
+                        val base64Image = ImageUtils.imageToBase64(bitmap)
+                        // Post image analysis to the server
+                        Toast.makeText(requireContext(), "Foto eniada al servidor.", Toast.LENGTH_SHORT).show()
+                        ServerUtils.postImageAnalysis(
+                            images = listOf<String>(base64Image),
+                            onSuccess = { response ->
+                                Log.d(TAG, "Image analysis successful: $response")
+                                try {
+                                    val jsonResponse = JSONObject(response)
+                                    val dataObject = jsonResponse.getJSONObject("data")
+                                    val description = dataObject.getString("description")
+
+                                    Log.d(TAG, "Extracted description: $description")
+                                    ttsUtils.speak(description)
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "Error parsing JSON response: ${e.message}")
+                                    ttsUtils.speak("Error processing analysis results")
+                                    // Alternatively, call onFailure here if you want to propagate the error
+                                }
+                            },
+                            onFailure = { errorMessage ->
+                                Log.e(TAG, "Image analysis failed: $errorMessage")
+
+                                requireActivity().runOnUiThread {
+                                    Toast.makeText(
+                                        requireContext(),
+                                        errorMessage,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        )
+                    } else {
+                        Log.e(TAG, "Error: URI de la imagen es nulo.")
+                    }
                 }
             }
         )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (allPermissionsGranted()) {
+                startCamera()
+            } else {
+                Toast.makeText(requireContext(), "Permissions not granted.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     // Función que detecta cuando se mueve el sensor y toma foto
@@ -187,7 +224,6 @@ class CameraTab : Fragment(), SensorEventListener {
         }
     }
 
-
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     override fun onDestroyView() {
@@ -204,7 +240,14 @@ class CameraTab : Fragment(), SensorEventListener {
     companion object {
         private const val TAG = "CameraFragment"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-        private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
+        private val REQUIRED_PERMISSIONS = mutableListOf(
+        Manifest.permission.CAMERA,
+        ).apply {
+            // Add WRITE_EXTERNAL_STORAGE only for devices running Android 9 (Pie) or lower
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }.toTypedArray()
         private const val REQUEST_CODE_PERMISSIONS = 10
     }
 }
