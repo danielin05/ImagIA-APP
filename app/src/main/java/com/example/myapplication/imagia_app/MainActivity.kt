@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
 
         // Cargar el fragmento por defecto
         if (savedInstanceState == null) {
-            bottomNavigationView.selectedItemId = R.id.navigation_camera
+            bottomNavigationView.selectedItemId = R.id.navigation_user
         }
     }
 }

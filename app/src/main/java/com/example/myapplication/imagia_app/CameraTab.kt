@@ -208,7 +208,7 @@ class CameraTab : Fragment(), SensorEventListener {
             val currentTime = System.currentTimeMillis()
 
             // Diferenciar entre los golpes y el movimiento del movil
-            val tapThreshold = 2.0 // Golpe
+            val tapThreshold = 1.5 // Golpe
             val movementThreshold = 1.0 // Movimiento del movil
 
             if (z > tapThreshold && x < movementThreshold && y < movementThreshold) {
