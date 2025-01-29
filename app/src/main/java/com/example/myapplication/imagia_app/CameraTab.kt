@@ -144,6 +144,8 @@ class CameraTab : Fragment(), SensorEventListener {
                             imageUri
                         ))
                         val base64Image = ImageUtils.imageToBase64(bitmap)
+                        // Stop the current tts
+                        ttsUtils.stop()
                         // Post image analysis to the server
                         Toast.makeText(requireContext(), "Foto eniada al servidor.", Toast.LENGTH_SHORT).show()
                         ServerUtils.postImageAnalysis(
@@ -231,6 +233,12 @@ class CameraTab : Fragment(), SensorEventListener {
         _binding = null
         cameraExecutor.shutdown()
         sensorManager.unregisterListener(this)
+        ttsUtils.shutdown()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        ttsUtils.shutdown()
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {

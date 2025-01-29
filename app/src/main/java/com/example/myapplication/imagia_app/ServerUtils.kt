@@ -15,12 +15,12 @@ import java.util.concurrent.TimeUnit
 class ServerUtils {
     companion object {
         private val localizedPrompts = mapOf(
-            "en" to "Analyze this image and describe its contents in detail",
-            "es" to "Analiza esta imagen y describe su contenido en detalle",
-            "ca" to "Analitza aquesta imatge i descriu-ne el contingut detalladament",
-            "fr" to "Analysez cette image et décrivez son contenu en détail",
-            "de" to "Analysieren Sie dieses Bild und beschreiben Sie den Inhalt im Detail"
-        ).withDefault { "Analyze this image and describe its contents in detail" } // English default
+            "en" to "Analyze this image and provide a brief description of its contents",
+            "es" to "Analiza esta imagen y proporciona una breve descripción de su contenido",
+            "ca" to "Analitza aquesta imatge i proporciona una breu descripció del seu contingut",
+            "fr" to "Analysez cette image et fournissez une brève description de son contenu",
+            "de" to "Analysieren Sie dieses Bild und geben Sie eine kurze Beschreibung seines Inhalts"
+        ).withDefault { "Analyze this image and provide a brief description of its contents" } // English default
 
 
         fun postImageAnalysis(

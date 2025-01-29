@@ -24,7 +24,13 @@ class TTSUtils(context: Context) {
         textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
     }
 
+    fun stop () {
+        textToSpeech?.stop()
+    }
+
     fun shutdown() {
+        textToSpeech?.stop()
         textToSpeech?.shutdown()
+        textToSpeech = null
     }
 }
