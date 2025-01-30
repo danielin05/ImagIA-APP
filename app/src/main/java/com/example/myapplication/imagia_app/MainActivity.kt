@@ -1,6 +1,7 @@
 package com.example.myapplication.imagia_app
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -23,21 +24,34 @@ class MainActivity : AppCompatActivity() {
 
         // Iniciar barra de navegación
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.barra_navegacion)
+        val menu = bottomNavigationView.menu
+        menu.findItem(R.id.navigation_camera).isChecked = false
+        menu.findItem(R.id.navigation_history).isChecked = false
 
         // Mandar al layout correspondiente cuando pulsas en la opción del menú
         bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_camera -> {
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.contenedor_tabs, CameraTab())
-                        .commit()
-                    true
+                    if (!item.isChecked) {
+                        Toast.makeText(this, "Debes iniciar sesión para acceder.", Toast.LENGTH_SHORT).show()
+                        false
+                    } else {
+                        supportFragmentManager.beginTransaction()
+                            .replace(R.id.contenedor_tabs, CameraTab())
+                            .commit()
+                        true
+                    }
                 }
                 R.id.navigation_history -> {
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.contenedor_tabs, HistoryTab())
-                        .commit()
-                    true
+                    if (!item.isChecked) {
+                        Toast.makeText(this, "Debes iniciar sesión para acceder.", Toast.LENGTH_SHORT).show()
+                        false
+                    } else {
+                        supportFragmentManager.beginTransaction()
+                            .replace(R.id.contenedor_tabs, HistoryTab())
+                            .commit()
+                        true
+                    }
                 }
                 R.id.navigation_user -> {
                     supportFragmentManager.beginTransaction()
