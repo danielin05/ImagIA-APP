@@ -22,7 +22,8 @@ class ServerUtils {
             "de" to "Analysieren Sie dieses Bild und geben Sie eine kurze Beschreibung seines Inhalts"
         ).withDefault { "Analyze this image and provide a brief description of its contents" } // English default
 
-        final val url = "http://10.0.2.2:3001"
+        //final val url = "http://10.0.2.2:3001" // Local
+        final val url = "https://imagia4.ieti.site" // Proxmox
         var apiKey = ""
 
         fun postImageAnalysis(
@@ -50,6 +51,7 @@ class ServerUtils {
 
             val request = Request.Builder()
                 .url(url+"/api/analitzar-imatge")
+                .header("Authorization", "Bearer $apiKey")
                 .post(requestBody)
                 .build()
 

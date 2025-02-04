@@ -1,5 +1,6 @@
 package com.example.myapplication.imagia_app
 
+import ServerUtils
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -20,6 +21,13 @@ class MainActivity : AppCompatActivity() {
 
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.barra_navegacion)
         val menu = bottomNavigationView.menu
+
+        val fileManager = FileManager(this)
+        val data = fileManager.loadFromFile()
+        if (data.isNotEmpty()) {
+            menuViewModel.unlockMenu()
+            ServerUtils.apiKey = data
+        }
 
         menuViewModel.isMenuUnlocked.observe(this) { isUnlocked ->
             if (isUnlocked) {

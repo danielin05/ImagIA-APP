@@ -4,7 +4,6 @@ import ServerUtils
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
-import android.util.Log
 import android.util.Patterns
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -17,6 +16,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class UserTab : Fragment() {
@@ -213,6 +215,8 @@ class UserTab : Fragment() {
                             val dataObject = jsonResponse.getJSONObject("data")
                             val apiKey = dataObject.getString("apiKey")
                             ServerUtils.apiKey = apiKey;
+                            val fileManager = FileManager(requireContext())
+                            fileManager.saveToFile(apiKey)
                         },
                         onFailure = { errorMessage ->
                             //showToast("Hubo un problema con el registro, inténtalo más tarde.")
@@ -227,6 +231,9 @@ class UserTab : Fragment() {
 
     private fun unlockBottomNavigationMenu() {
         val menuViewModel = ViewModelProvider(requireActivity()).get(MenuViewModel::class.java)
-        menuViewModel.unlockMenu()
+        // Switch to main thread
+        lifecycleScope.launch(Dispatchers.Main) {
+            menuViewModel.unlockMenu()
+        }
     }
 }
