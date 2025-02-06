@@ -1,6 +1,7 @@
 package com.example.myapplication.imagia_app
 
 import android.content.Context
+import java.io.File
 
 class FileManager(private val context: Context) {
     private val filename = "data.txt"
@@ -25,4 +26,15 @@ class FileManager(private val context: Context) {
             ""
         }
     }
+
+    fun deleteFile(): Boolean {
+        return try {
+            val file = File(context.filesDir, filename)
+            file.delete()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
 }

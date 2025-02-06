@@ -2,6 +2,7 @@ package com.example.myapplication.imagia_app
 
 import ServerUtils
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -34,33 +35,35 @@ class MainActivity : AppCompatActivity() {
                 menu.findItem(R.id.navigation_camera).isEnabled = true
                 menu.findItem(R.id.navigation_history).isEnabled = true
             } else {
-                menu.findItem(R.id.navigation_camera).isEnabled = false
-                menu.findItem(R.id.navigation_history).isEnabled = false
+                menu.findItem(R.id.navigation_camera).isEnabled = true
+                menu.findItem(R.id.navigation_history).isEnabled = true
             }
         }
 
         bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_camera -> {
-                    if (!menuViewModel.isMenuUnlocked.value!!) {
-                        Toast.makeText(this, "Debes iniciar sesión para acceder.", Toast.LENGTH_SHORT).show()
-                        false
-                    } else {
+                    if (menuViewModel.isMenuUnlocked.value == true) {
                         supportFragmentManager.beginTransaction()
                             .replace(R.id.contenedor_tabs, CameraTab())
                             .commit()
                         true
+                    } else {
+                        Log.d("MenuStatus", "Menu bloqueado")
+                        Toast.makeText(this, "Debes iniciar sesión para acceder.", Toast.LENGTH_SHORT).show()
+                        false
                     }
                 }
                 R.id.navigation_history -> {
-                    if (!menuViewModel.isMenuUnlocked.value!!) {
-                        Toast.makeText(this, "Debes iniciar sesión para acceder.", Toast.LENGTH_SHORT).show()
-                        false
-                    } else {
+                    if (menuViewModel.isMenuUnlocked.value == true) {
                         supportFragmentManager.beginTransaction()
                             .replace(R.id.contenedor_tabs, HistoryTab())
                             .commit()
                         true
+                    } else {
+                        Log.d("MenuStatus", "Menu bloqueado")
+                        Toast.makeText(this, "Debes iniciar sesión para acceder.", Toast.LENGTH_SHORT).show()
+                        false
                     }
                 }
                 R.id.navigation_user -> {
@@ -73,9 +76,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        if (savedInstanceState == null) {
+        if (ServerUtils.apiKey.isNotEmpty()) {
+            bottomNavigationView.selectedItemId = R.id.navigation_camera
+        } else if (savedInstanceState == null) {
             bottomNavigationView.selectedItemId = R.id.navigation_user
         }
     }
 }
+
 

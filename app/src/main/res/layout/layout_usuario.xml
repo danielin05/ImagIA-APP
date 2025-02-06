@@ -17,7 +17,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/tvRegister"
+        android:id="@+id/userName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -43,7 +43,7 @@
         android:textColorHint="#6E000000"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvRegister" />
+        app:layout_constraintTop_toBottomOf="@id/userName" />
 
     <EditText
         android:id="@+id/etUsername"

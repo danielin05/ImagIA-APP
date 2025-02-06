@@ -29,6 +29,13 @@ class UserTab : Fragment() {
     ): View {
         val view = inflater.inflate(R.layout.layout_usuario, container, false)
 
+        if (ServerUtils.apiKey.isNotEmpty()) {
+            val userDetailsTab = UserDetailsTab()
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.contenedor_tabs, userDetailsTab)
+                .commit()
+        }
+
         val etEmail = view.findViewById<EditText>(R.id.etEmail)
         val etUsername = view.findViewById<EditText>(R.id.etUsername)
         val btnLogin = view.findViewById<ImageButton>(R.id.btnLogin)
@@ -125,7 +132,7 @@ class UserTab : Fragment() {
                                     phone = phone,
                                     onSuccess = { response ->
                                         requireActivity().runOnUiThread {
-                                            enterSMS(phone)
+                                            enterSMS(phone, username, email)
                                         }
                                     },
                                     onFailure = { errorMessage ->
@@ -160,7 +167,7 @@ class UserTab : Fragment() {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
-    private fun enterSMS(phone: String) {
+    private fun enterSMS(phone: String, name: String, email: String) {
         val inputSMS = EditText(requireContext()).apply {
             inputType = InputType.TYPE_CLASS_NUMBER
             minEms = 5
@@ -209,17 +216,23 @@ class UserTab : Fragment() {
                         phone = phone,
                         code = smsCode,
                         onSuccess = { response ->
-                            dialogSMS.dismiss()
-                            unlockBottomNavigationMenu()
-                            val jsonResponse = JSONObject(response)
-                            val dataObject = jsonResponse.getJSONObject("data")
-                            val apiKey = dataObject.getString("apiKey")
-                            ServerUtils.apiKey = apiKey;
-                            val fileManager = FileManager(requireContext())
-                            fileManager.saveToFile(apiKey)
+                            requireActivity().runOnUiThread {
+                                dialogSMS.dismiss()
+                                unlockBottomNavigationMenu()
+                                val jsonResponse = JSONObject(response)
+                                val dataObject = jsonResponse.getJSONObject("data")
+                                val apiKey = dataObject.getString("apiKey")
+                                ServerUtils.apiKey = apiKey;
+                                val fileManager = FileManager(requireContext())
+                                fileManager.saveToFile(apiKey)
+                                changeLayout(name, email, phone)
+                            }
+
                         },
                         onFailure = { errorMessage ->
-                            //showToast("Hubo un problema con el registro, inténtalo más tarde.")
+                            requireActivity().runOnUiThread {
+                                showToast("Hubo un problema con el registro, inténtalo más tarde.")
+                                }
                         }
                     )
                 }
@@ -236,4 +249,22 @@ class UserTab : Fragment() {
             menuViewModel.unlockMenu()
         }
     }
+
+    private fun changeLayout(userName: String, userEmail: String, userPhone: String) {
+        val sharedPreferences = requireContext().getSharedPreferences("UserData", android.content.Context.MODE_PRIVATE)
+        with(sharedPreferences.edit()) {
+            putString("userName", userName)
+            putString("userEmail", userEmail)
+            putString("userPhone", userPhone)
+            apply()
+        }
+
+        val userDetailsTab = UserDetailsTab()
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.contenedor_tabs, userDetailsTab)
+            .addToBackStack(null)
+            .commit()
+    }
+
+
 }
