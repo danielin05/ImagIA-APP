@@ -317,7 +317,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="file:$USER_HOME$/Android/Sdk/icons/material/materialicons/lens/baseline_lens_24.xml" />
+                                      <entry key="url" value="file:$USER_HOME$/Android/Sdk/icons/material/materialicons/exit_to_app/baseline_exit_to_app_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -327,8 +327,8 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="color" value="ffffff" />
-                            <entry key="outputName" value="foto" />
+                            <entry key="color" value="e10909" />
+                            <entry key="outputName" value="ic_log_out" />
                           </map>
                         </option>
                       </PersistentState>

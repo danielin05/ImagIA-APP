@@ -1,43 +1,70 @@
 package com.example.myapplication.imagia_app
 
+import ServerUtils
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.activity.viewModels
 
 class MainActivity : AppCompatActivity() {
+
+    private val menuViewModel: MenuViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-
         supportActionBar?.hide()
 
-        // Iniciar barra de navegación
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.barra_navegacion)
+        val menu = bottomNavigationView.menu
 
-        // Mandar al layout correspondiente cuando pulsas en la opción del menú
+        val fileManager = FileManager(this)
+        val data = fileManager.loadFromFile()
+        if (data.isNotEmpty()) {
+            menuViewModel.unlockMenu()
+            ServerUtils.apiKey = data
+        }
+
+        menuViewModel.isMenuUnlocked.observe(this) { isUnlocked ->
+            if (isUnlocked) {
+                menu.findItem(R.id.navigation_camera).isEnabled = true
+                menu.findItem(R.id.navigation_history).isEnabled = true
+            } else {
+                menu.findItem(R.id.navigation_camera).isEnabled = true
+                menu.findItem(R.id.navigation_history).isEnabled = true
+            }
+        }
+
         bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_camera -> {
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.contenedor_tabs, CameraTab())
-                        .commit()
-                    true
+                    if (menuViewModel.isMenuUnlocked.value == true) {
+                        supportFragmentManager.beginTransaction()
+                            .replace(R.id.contenedor_tabs, CameraTab())
+                            .commit()
+                        true
+                    } else {
+                        Log.d("MenuStatus", "Menu bloqueado")
+                        Toast.makeText(this, "Debes iniciar sesión para acceder.", Toast.LENGTH_SHORT).show()
+                        false
+                    }
                 }
                 R.id.navigation_history -> {
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.contenedor_tabs, HistoryTab())
-                        .commit()
-                    true
+                    if (menuViewModel.isMenuUnlocked.value == true) {
+                        supportFragmentManager.beginTransaction()
+                            .replace(R.id.contenedor_tabs, HistoryTab(), "HISTORY_TAB")
+                            .commit()
+                        true
+                    } else {
+                        Log.d("MenuStatus", "Menu bloqueado")
+                        Toast.makeText(this, "Debes iniciar sesión para acceder.", Toast.LENGTH_SHORT).show()
+                        false
+                    }
                 }
                 R.id.navigation_user -> {
                     supportFragmentManager.beginTransaction()
@@ -49,9 +76,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Cargar el fragmento por defecto
-        if (savedInstanceState == null) {
+        if (ServerUtils.apiKey.isNotEmpty()) {
             bottomNavigationView.selectedItemId = R.id.navigation_camera
+        } else if (savedInstanceState == null) {
+            bottomNavigationView.selectedItemId = R.id.navigation_user
         }
     }
 }
+
+

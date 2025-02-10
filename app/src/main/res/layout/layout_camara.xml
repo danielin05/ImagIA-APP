@@ -7,11 +7,10 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <!-- PreviewView ajustada a media pantalla -->
     <androidx.camera.view.PreviewView
         android:id="@+id/viewFinder"
         android:layout_width="421dp"
-        android:layout_height="690dp"
+        android:layout_height="770dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.5"
@@ -19,40 +18,13 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
 
-    <!-- ImageView para mostrar la imagen capturada -->
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:scaleType="fitCenter"
-        app:layout_constraintBottom_toTopOf="@id/buttonContainer"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/viewFinder" />
 
-    <!-- Contenedor para los botones -->
-    <LinearLayout
-        android:id="@+id/buttonContainer"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:gravity="center"/>
-
-    <!-- Botón de captura en la parte inferior de la cámara -->
-    <ImageView
-        android:id="@+id/captureButton"
-        android:layout_width="410dp"
-        android:layout_height="90dp"
-        android:layout_marginStart="165dp"
-        android:background="#7E000000"
-        app:layout_constraintBottom_toBottomOf="@id/viewFinder"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.96"
-        app:layout_constraintStart_toStartOf="@id/viewFinder"
-        app:layout_constraintTop_toTopOf="@id/viewFinder"
-        app:layout_constraintVertical_bias="0.96"
-        app:srcCompat="@drawable/foto" />
 </androidx.constraintlayout.widget.ConstraintLayout>
