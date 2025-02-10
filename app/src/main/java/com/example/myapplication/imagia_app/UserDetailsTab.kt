@@ -47,6 +47,9 @@ class UserDetailsTab : Fragment() {
                 apply()
             }
 
+            val historyTab = parentFragmentManager.findFragmentByTag("HISTORY_TAB") as? HistoryTab
+            historyTab?.clearHistory()
+
             val menuViewModel = ViewModelProvider(requireActivity()).get(MenuViewModel::class.java)
             lifecycleScope.launch(Dispatchers.Main) {
                 menuViewModel.lockMenu()

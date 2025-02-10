@@ -23,6 +23,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.myapplication.imagia_app.databinding.LayoutCamaraBinding
+import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -44,6 +45,7 @@ class CameraTab : Fragment(), SensorEventListener {
     private var lastTapTime: Long = 0
     private var tapCount = 0
     private lateinit var ttsUtils: TTSUtils
+    private var currentQuota: Int = 1
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,7 +56,6 @@ class CameraTab : Fragment(), SensorEventListener {
         return binding.root
     }
 
-    // Iniciar camara y sensores
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -66,18 +67,11 @@ class CameraTab : Fragment(), SensorEventListener {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        // Inicializar el sensor
         sensorManager = requireContext().getSystemService(Context.SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)!!
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
-
-        // Listener para el botón de captura
-        binding.captureButton.setOnClickListener {
-            takePhoto()
-        }
     }
 
-    //Iniciar camara x en el layout
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
 
@@ -137,7 +131,6 @@ class CameraTab : Fragment(), SensorEventListener {
                     val imageUri = output.savedUri
                     if (imageUri != null) {
                         Log.d(TAG, "Foto guardada: $imageUri")
-                        Toast.makeText(requireContext(), "Foto guardada con éxito.", Toast.LENGTH_SHORT).show()
 
                         val bitmap = ImageUtils.resizeImage(MediaStore.Images.Media.getBitmap(
                             requireContext().contentResolver,
@@ -147,7 +140,7 @@ class CameraTab : Fragment(), SensorEventListener {
                         // Stop the current tts
                         ttsUtils.stop()
                         // Post image analysis to the server
-                        Toast.makeText(requireContext(), "Foto eniada al servidor.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Foto enviada al servidor.", Toast.LENGTH_SHORT).show()
                         ServerUtils.postImageAnalysis(
                             images = listOf<String>(base64Image),
                             onSuccess = { response ->
@@ -156,8 +149,12 @@ class CameraTab : Fragment(), SensorEventListener {
                                     val jsonResponse = JSONObject(response)
                                     val dataObject = jsonResponse.getJSONObject("data")
                                     val description = dataObject.getString("description")
+                                    val quota = dataObject.getString("currentQuota")
+                                    printQuota(quota)
 
                                     Log.d(TAG, "Extracted description: $description")
+                                    saveImageHistory(imageUri.toString(), description)
+
                                     ttsUtils.speak(description)
                                 } catch (e: Exception) {
                                     Log.e(TAG, "Error parsing JSON response: ${e.message}")
@@ -169,11 +166,13 @@ class CameraTab : Fragment(), SensorEventListener {
                                 Log.e(TAG, "Image analysis failed: $errorMessage")
 
                                 requireActivity().runOnUiThread {
-                                    Toast.makeText(
-                                        requireContext(),
-                                        errorMessage,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    try {
+                                        val message = errorMessage.getString("message")
+                                        Log.e(TAG,  message)
+                                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                                    } catch (e: Exception) {
+                                        Toast.makeText(requireContext(), "Error: $errorMessage", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         )
@@ -244,6 +243,52 @@ class CameraTab : Fragment(), SensorEventListener {
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
     }
+
+    private fun saveImageHistory(imageUri: String, description: String) {
+        val sharedPreferences = requireContext().getSharedPreferences("image_data", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+
+        val jsonString = sharedPreferences.getString("image_list", null)
+        val imageHistory = mutableListOf<Pair<String, String>>()
+
+        if (!jsonString.isNullOrEmpty()) {
+            val jsonArray = JSONArray(jsonString)
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val uri = obj.getString("imageUri")
+                val desc = obj.getString("description")
+                imageHistory.add(Pair(uri, desc))
+            }
+        }
+
+        imageHistory.add(Pair(imageUri, description))
+
+        val jsonArray = JSONArray()
+        imageHistory.forEach { (uri, desc) ->
+            val obj = JSONObject().apply {
+                put("imageUri", uri)
+                put("description", desc)
+            }
+            jsonArray.put(obj)
+        }
+
+        editor.putString("image_list", jsonArray.toString())
+        editor.apply()
+    }
+
+
+    private fun printQuota(quota: String) {
+        currentQuota = quota.toIntOrNull() ?: 0
+
+        requireActivity().runOnUiThread {
+            if (currentQuota > 0) {
+                Toast.makeText(requireContext(), "Quota disponible: $quota", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "Quota agotada. No puedes tomar más fotos.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 
     companion object {
         private const val TAG = "CameraFragment"

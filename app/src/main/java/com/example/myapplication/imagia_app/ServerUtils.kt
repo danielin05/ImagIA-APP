@@ -30,7 +30,7 @@ class ServerUtils {
             images: List<String> = emptyList(),
             locale: String = Locale.getDefault().language,
             onSuccess: (String) -> Unit,
-            onFailure: (String) -> Unit
+            onFailure: (JSONObject) -> Unit
         ) {
             val client = OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)  // Set the connection timeout
@@ -58,9 +58,9 @@ class ServerUtils {
             Log.d(tag, "Request prepared. Sending request to the server.")
             client.newCall(request).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    val errorMessage = "Network error: ${e.message}"
+                    val errorMessage = "{Network error: ${e.message}}"
                     Log.e(tag, errorMessage, e)
-                    onFailure(errorMessage)
+                    onFailure(JSONObject(errorMessage))
                 }
 
                 override fun onResponse(call: Call, response: Response) {
@@ -69,7 +69,7 @@ class ServerUtils {
                         if (!response.isSuccessful) {
                             val unexpectedResponseMessage = "Unexpected response: $responseBody"
                             Log.w(tag, unexpectedResponseMessage)
-                            onFailure(unexpectedResponseMessage)
+                            onFailure(JSONObject(responseBody))
                         } else {
                             Log.d(tag, "Response received successfully: $responseBody")
                             onSuccess(responseBody)

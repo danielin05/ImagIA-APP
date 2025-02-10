@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_history -> {
                     if (menuViewModel.isMenuUnlocked.value == true) {
                         supportFragmentManager.beginTransaction()
-                            .replace(R.id.contenedor_tabs, HistoryTab())
+                            .replace(R.id.contenedor_tabs, HistoryTab(), "HISTORY_TAB")
                             .commit()
                         true
                     } else {
